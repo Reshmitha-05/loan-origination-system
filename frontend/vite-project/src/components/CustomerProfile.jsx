@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+
 import {
   FaUser,
   FaEnvelope,
@@ -14,7 +15,8 @@ import {
   FaTimes
 } from "react-icons/fa";
 
-function Profile() {
+function CustomerProfile({ onBack }) {
+
   const [isEditing, setIsEditing] = useState(false);
 
   const [profile, setProfile] = useState({
@@ -35,76 +37,230 @@ function Profile() {
   const [editProfile, setEditProfile] = useState(profile);
 
   useEffect(() => {
-  const savedProfile = localStorage.getItem("adminProfile");
 
-  const email = localStorage.getItem("loggedInAdminEmail") || "";
-  const userName = localStorage.getItem("loggedInAdminName") || "Admin User";
+    // Get currently logged-in customer
+    const email =
+      localStorage.getItem("loggedInCustomerEmail") ||
+      localStorage.getItem("customerEmail") ||
+      "";
 
-  if (savedProfile) {
-    try {
-      const parsedProfile = JSON.parse(savedProfile);
+    const customerName =
+      localStorage.getItem("loggedInCustomerName") ||
+      "Customer";
 
-      const updatedProfile = {
-        ...profile,
-        ...parsedProfile,
-        email: parsedProfile.email || email,
-        name: parsedProfile.name || userName
-      };
+    // Get customer account
+    const storedAccounts =
+      localStorage.getItem("customerAccounts");
 
-      setProfile(updatedProfile);
-      setEditProfile(updatedProfile);
-    } catch (error) {
-      console.error("Error loading admin profile:", error);
+    let customerAccount = null;
+
+    if (storedAccounts) {
+
+      try {
+
+        const accounts = JSON.parse(storedAccounts);
+
+        customerAccount = accounts.find(
+          (account) => account.email === email
+        );
+
+      } catch (error) {
+
+        console.error(
+          "Error loading customer accounts:",
+          error
+        );
+
+      }
+
     }
-  } else {
-    const defaultProfile = {
-      ...profile,
-      name: userName,
-      email: email
+
+    // Get customer-specific profile information
+    const savedProfile =
+      localStorage.getItem(
+        `customerProfile_${email}`
+      );
+
+    let extraProfile = {};
+
+    if (savedProfile) {
+
+      try {
+
+        extraProfile = JSON.parse(savedProfile);
+
+      } catch (error) {
+
+        console.error(
+          "Error loading customer profile:",
+          error
+        );
+
+      }
+
+    }
+
+    const customerProfile = {
+
+      name:
+        customerAccount?.name ||
+        extraProfile.name ||
+        customerName,
+
+      email:
+        customerAccount?.email ||
+        extraProfile.email ||
+        email,
+
+      phone:
+        customerAccount?.phone ||
+        extraProfile.phone ||
+        "",
+
+      dateOfBirth:
+        extraProfile.dateOfBirth || "",
+
+      gender:
+        extraProfile.gender || "",
+
+      profession:
+        extraProfile.profession || "",
+
+      employer:
+        extraProfile.employer || "",
+
+      monthlyIncome:
+        extraProfile.monthlyIncome || "",
+
+      address:
+        extraProfile.address || "",
+
+      city:
+        extraProfile.city || "",
+
+      state:
+        extraProfile.state || "",
+
+      pincode:
+        extraProfile.pincode || ""
+
     };
 
-    setProfile(defaultProfile);
-    setEditProfile(defaultProfile);
-  }
-}, []);
+    setProfile(customerProfile);
+    setEditProfile(customerProfile);
 
+  }, []);
+
+  // Handle editing fields
   const handleChange = (e) => {
+
     const { name, value } = e.target;
 
     setEditProfile((previous) => ({
       ...previous,
       [name]: value
     }));
+
   };
 
- const handleSave = () => {
-  localStorage.setItem(
-    "adminProfile",
-    JSON.stringify(editProfile)
-  );
+  // Save customer profile
+  const handleSave = () => {
 
-  localStorage.setItem(
-    "loggedInAdminName",
-    editProfile.name
-  );
+    const oldEmail =
+      localStorage.getItem("loggedInCustomerEmail") ||
+      localStorage.getItem("customerEmail") ||
+      "";
 
-  localStorage.setItem(
-    "loggedInAdminEmail",
-    editProfile.email
-  );
+    /*
+     * Save extra profile information
+     * using a CUSTOMER-SPECIFIC key.
+     *
+     * This prevents different customers
+     * from sharing the same profile.
+     */
+    localStorage.setItem(
+      `customerProfile_${editProfile.email}`,
+      JSON.stringify(editProfile)
+    );
 
-  setProfile(editProfile);
-  setIsEditing(false);
+    // Update customer account
+    const storedAccounts =
+      localStorage.getItem("customerAccounts");
 
-  alert("Profile updated successfully.");
-};
+    if (storedAccounts) {
 
+      try {
+
+        const accounts = JSON.parse(storedAccounts);
+
+        const updatedAccounts = accounts.map((account) => {
+
+          if (account.email === oldEmail) {
+
+            return {
+              ...account,
+              name: editProfile.name,
+              email: editProfile.email,
+              phone: editProfile.phone
+            };
+
+          }
+
+          return account;
+
+        });
+
+        localStorage.setItem(
+          "customerAccounts",
+          JSON.stringify(updatedAccounts)
+        );
+
+      } catch (error) {
+
+        console.error(
+          "Error updating customer account:",
+          error
+        );
+
+      }
+
+    }
+
+    // Update current logged-in customer information
+    localStorage.setItem(
+      "loggedInCustomerName",
+      editProfile.name
+    );
+
+    localStorage.setItem(
+      "loggedInCustomerEmail",
+      editProfile.email
+    );
+
+    // Keep old key for compatibility with existing pages
+    localStorage.setItem(
+      "customerEmail",
+      editProfile.email
+    );
+
+    setProfile(editProfile);
+    setIsEditing(false);
+
+    alert("Profile updated successfully.");
+
+  };
+
+  // Cancel editing
   const handleCancel = () => {
+
     setEditProfile(profile);
     setIsEditing(false);
+
   };
 
+  // Calculate profile completion
   const calculateCompletion = () => {
+
     const fields = [
       profile.name,
       profile.email,
@@ -121,32 +277,46 @@ function Profile() {
     ];
 
     const completedFields = fields.filter(
-      (field) => field && String(field).trim() !== ""
+      (field) =>
+        field &&
+        String(field).trim() !== ""
     ).length;
 
-    return Math.round((completedFields / fields.length) * 100);
+    return Math.round(
+      (completedFields / fields.length) * 100
+    );
+
   };
 
   const completion = calculateCompletion();
 
   const getInitial = () => {
+
     if (profile.name) {
-      return profile.name.charAt(0).toUpperCase();
+      return profile.name
+        .charAt(0)
+        .toUpperCase();
     }
 
     return "C";
+
   };
 
   const displayValue = (value) => {
-    return value && String(value).trim() !== ""
+
+    return value &&
+      String(value).trim() !== ""
       ? value
       : "Not provided";
+
   };
 
   return (
+
     <div className="page-container">
 
       {/* PAGE HEADER */}
+
       <div
         style={{
           display: "flex",
@@ -155,7 +325,9 @@ function Profile() {
           marginBottom: "25px"
         }}
       >
+
         <div>
+
           <h1
             style={{
               margin: 0,
@@ -174,9 +346,11 @@ function Profile() {
           >
             Manage your personal and professional information
           </p>
+
         </div>
 
         {!isEditing ? (
+
           <button
             onClick={() => setIsEditing(true)}
             style={{
@@ -195,8 +369,16 @@ function Profile() {
             <FaEdit />
             Edit Profile
           </button>
+
         ) : (
-          <div style={{ display: "flex", gap: "10px" }}>
+
+          <div
+            style={{
+              display: "flex",
+              gap: "10px"
+            }}
+          >
+
             <button
               onClick={handleCancel}
               style={{
@@ -233,11 +415,15 @@ function Profile() {
               <FaSave />
               Save Changes
             </button>
+
           </div>
+
         )}
+
       </div>
 
       {/* PROFILE OVERVIEW */}
+
       <div
         style={{
           background: "white",
@@ -251,6 +437,7 @@ function Profile() {
           gap: "30px"
         }}
       >
+
         <div
           style={{
             display: "flex",
@@ -258,6 +445,7 @@ function Profile() {
             gap: "18px"
           }}
         >
+
           <div
             style={{
               width: "75px",
@@ -276,6 +464,7 @@ function Profile() {
           </div>
 
           <div>
+
             <h2
               style={{
                 margin: 0,
@@ -291,7 +480,7 @@ function Profile() {
                 color: "#6b7280"
               }}
             >
-              Admin
+              Customer
             </p>
 
             <p
@@ -303,15 +492,19 @@ function Profile() {
             >
               {displayValue(profile.email)}
             </p>
+
           </div>
+
         </div>
 
         {/* PROFILE COMPLETION */}
+
         <div
           style={{
             width: "280px"
           }}
         >
+
           <div
             style={{
               display: "flex",
@@ -319,6 +512,7 @@ function Profile() {
               marginBottom: "8px"
             }}
           >
+
             <span
               style={{
                 fontWeight: "600",
@@ -336,6 +530,7 @@ function Profile() {
             >
               {completion}%
             </span>
+
           </div>
 
           <div
@@ -346,6 +541,7 @@ function Profile() {
               overflow: "hidden"
             }}
           >
+
             <div
               style={{
                 width: `${completion}%`,
@@ -355,6 +551,7 @@ function Profile() {
                 transition: "width 0.3s ease"
               }}
             />
+
           </div>
 
           <p
@@ -366,14 +563,18 @@ function Profile() {
           >
             Complete your profile to improve your loan application experience.
           </p>
+
         </div>
+
       </div>
 
       {/* PERSONAL INFORMATION */}
+
       <ProfileSection
         title="Personal Information"
         icon={<FaUser />}
       >
+
         <ProfileField
           label="Full Name"
           icon={<FaUser />}
@@ -431,13 +632,16 @@ function Profile() {
             "Prefer not to say"
           ]}
         />
+
       </ProfileSection>
 
       {/* PROFESSIONAL INFORMATION */}
+
       <ProfileSection
         title="Professional Information"
         icon={<FaBriefcase />}
       >
+
         <ProfileField
           label="Profession / Employment Type"
           icon={<FaBriefcase />}
@@ -472,7 +676,9 @@ function Profile() {
           name="monthlyIncome"
           value={
             profile.monthlyIncome
-              ? `₹${Number(profile.monthlyIncome).toLocaleString("en-IN")}`
+              ? `₹${Number(
+                  profile.monthlyIncome
+                ).toLocaleString("en-IN")}`
               : ""
           }
           editValue={editProfile.monthlyIncome}
@@ -481,13 +687,16 @@ function Profile() {
           type="number"
           prefix="₹"
         />
+
       </ProfileSection>
 
       {/* ADDRESS */}
+
       <ProfileSection
         title="Address Information"
         icon={<FaMapMarkerAlt />}
       >
+
         <ProfileField
           label="Address"
           icon={<FaMapMarkerAlt />}
@@ -528,9 +737,11 @@ function Profile() {
           isEditing={isEditing}
           onChange={handleChange}
         />
+
       </ProfileSection>
 
       {/* KYC */}
+
       <div
         style={{
           background: "white",
@@ -540,6 +751,7 @@ function Profile() {
           marginBottom: "30px"
         }}
       >
+
         <div
           style={{
             display: "flex",
@@ -548,7 +760,9 @@ function Profile() {
             marginBottom: "20px"
           }}
         >
+
           <FaShieldAlt color="#0A2654" />
+
           <h3
             style={{
               margin: 0,
@@ -557,6 +771,7 @@ function Profile() {
           >
             KYC Information
           </h3>
+
         </div>
 
         <div
@@ -569,8 +784,14 @@ function Profile() {
             borderRadius: "8px"
           }}
         >
+
           <div>
-            <strong style={{ color: "#0A2654" }}>
+
+            <strong
+              style={{
+                color: "#0A2654"
+              }}
+            >
               KYC Verification
             </strong>
 
@@ -583,6 +804,7 @@ function Profile() {
             >
               Submit and verify your identity documents from the Documents section.
             </p>
+
           </div>
 
           <span
@@ -597,19 +819,29 @@ function Profile() {
           >
             Pending
           </span>
+
         </div>
+
       </div>
 
     </div>
+
   );
 }
+
 
 /* ============================
    PROFILE SECTION
 ============================ */
 
-function ProfileSection({ title, icon, children }) {
+function ProfileSection({
+  title,
+  icon,
+  children
+}) {
+
   return (
+
     <div
       style={{
         background: "white",
@@ -619,6 +851,7 @@ function ProfileSection({ title, icon, children }) {
         marginBottom: "20px"
       }}
     >
+
       <div
         style={{
           display: "flex",
@@ -627,7 +860,12 @@ function ProfileSection({ title, icon, children }) {
           marginBottom: "22px"
         }}
       >
-        <span style={{ color: "#0A2654" }}>
+
+        <span
+          style={{
+            color: "#0A2654"
+          }}
+        >
           {icon}
         </span>
 
@@ -639,20 +877,26 @@ function ProfileSection({ title, icon, children }) {
         >
           {title}
         </h3>
+
       </div>
 
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+          gridTemplateColumns:
+            "repeat(2, minmax(0, 1fr))",
           gap: "20px"
         }}
       >
         {children}
       </div>
+
     </div>
+
   );
+
 }
+
 
 /* ============================
    PROFILE FIELD
@@ -671,12 +915,16 @@ function ProfileField({
   fullWidth,
   prefix
 }) {
+
   return (
+
     <div
       style={{
-        gridColumn: fullWidth ? "1 / -1" : "auto"
+        gridColumn:
+          fullWidth ? "1 / -1" : "auto"
       }}
     >
+
       <label
         style={{
           display: "block",
@@ -690,35 +938,56 @@ function ProfileField({
       </label>
 
       {isEditing ? (
+
         selectOptions ? (
+
           <select
             name={name}
             value={editValue || ""}
             onChange={onChange}
             style={inputStyle}
           >
-            <option value="">Select {label}</option>
+
+            <option value="">
+              Select {label}
+            </option>
 
             {selectOptions.map((option) => (
-              <option key={option} value={option}>
+
+              <option
+                key={option}
+                value={option}
+              >
                 {option}
               </option>
+
             ))}
+
           </select>
+
         ) : (
-          <div style={{ position: "relative" }}>
+
+          <div
+            style={{
+              position: "relative"
+            }}
+          >
+
             {prefix && (
+
               <span
                 style={{
                   position: "absolute",
                   left: "13px",
                   top: "50%",
-                  transform: "translateY(-50%)",
+                  transform:
+                    "translateY(-50%)",
                   color: "#6b7280"
                 }}
               >
                 {prefix}
               </span>
+
             )}
 
             <input
@@ -728,12 +997,17 @@ function ProfileField({
               onChange={onChange}
               style={{
                 ...inputStyle,
-                paddingLeft: prefix ? "30px" : "12px"
+                paddingLeft:
+                  prefix ? "30px" : "12px"
               }}
             />
+
           </div>
+
         )
+
       ) : (
+
         <div
           style={{
             minHeight: "42px",
@@ -743,28 +1017,46 @@ function ProfileField({
             padding: "10px 12px",
             background: "#f8fafc",
             borderRadius: "7px",
-            color: value ? "#374151" : "#9ca3af",
+            color: value
+              ? "#374151"
+              : "#9ca3af",
             fontSize: "14px"
           }}
         >
-          <span style={{ color: "#64748b" }}>
+
+          <span
+            style={{
+              color: "#64748b"
+            }}
+          >
             {icon}
           </span>
 
           {displayFieldValue(value)}
+
         </div>
+
       )}
+
     </div>
+
   );
+
 }
+
 
 function displayFieldValue(value) {
-  return value && String(value).trim() !== ""
+
+  return value &&
+    String(value).trim() !== ""
     ? value
     : "Not provided";
+
 }
 
+
 const inputStyle = {
+
   width: "100%",
   boxSizing: "border-box",
   padding: "11px 12px",
@@ -774,6 +1066,8 @@ const inputStyle = {
   fontSize: "14px",
   color: "#374151",
   background: "white"
+
 };
 
-export default Profile;
+
+export default CustomerProfile;

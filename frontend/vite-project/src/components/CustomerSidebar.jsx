@@ -18,9 +18,10 @@ function CustomerSidebar({ activeTab, setActiveTab, isCollapsed, setIsCollapsed 
 
   return (
     <div className={`customer-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
-      <div className="customer-sidebar-menu">
+      {/* Sidebar Menu */}
+      <ul className="customer-sidebar-menu">
         {menuItems.map((item) => (
-          <div
+          <li
             key={item.name}
             className={`customer-sidebar-item ${activeTab === item.path ? 'active' : ''}`}
             onClick={() => setActiveTab(item.path)}
@@ -30,9 +31,9 @@ function CustomerSidebar({ activeTab, setActiveTab, isCollapsed, setIsCollapsed 
               <span className="menu-icon">{item.icon}</span>
               {!isCollapsed && <span className="menu-label">{item.name}</span>}
             </div>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
 
       {/* Sidebar Footer */}
       <div className="customer-sidebar-footer">
