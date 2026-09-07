@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-
+import API_URL from "../api";
 import {
   AiOutlineStock
 } from "react-icons/ai";
@@ -96,9 +96,7 @@ function Reports() {
 
 
       const customersResponse =
-        await fetch(
-          "http://localhost:8080/customers"
-        );
+        await fetch(`${API_URL}/customers`);
 
 
       if (!customersResponse.ok) {
@@ -117,9 +115,7 @@ function Reports() {
 
 
       const loansResponse =
-        await fetch(
-          "http://localhost:8080/loans"
-        );
+        await fetch(`${API_URL}/loans`);
 
 
       if (!loansResponse.ok) {

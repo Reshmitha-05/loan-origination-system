@@ -8,11 +8,11 @@ import {
 } from 'recharts';
 
 import {
-  FaUsers,
-  FaFileAlt,
-  FaClock,
   FaCheckCircle,
-  FaMoneyBillWave
+  FaClock,
+  FaFileAlt,
+  FaMoneyBillWave,
+  FaUsers
 } from 'react-icons/fa';
 
 function Dashboard() {
@@ -31,9 +31,7 @@ function Dashboard() {
       setLoading(true);
       setError(null);
 
-      const customersResponse = await fetch(
-        'http://localhost:8080/customers'
-      );
+      const customersResponse = await fetch(`${API_URL}/customers`);
 
       if (!customersResponse.ok) {
         throw new Error('Failed to fetch customers');
@@ -42,9 +40,7 @@ function Dashboard() {
       const customersData = await customersResponse.json();
       setCustomers(customersData);
 
-      const loansResponse = await fetch(
-        'http://localhost:8080/loans'
-      );
+      const loansResponse = await fetch(`${API_URL}/loans`);
 
       if (!loansResponse.ok) {
         throw new Error('Failed to fetch loans');

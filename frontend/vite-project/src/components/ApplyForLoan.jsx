@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
-
 import {
-  FaUser,
-  FaMoneyBillWave,
-  FaBriefcase,
-  FaFileAlt,
-  FaCheckCircle,
-  FaArrowRight,
   FaArrowLeft,
-  FaCalculator
+  FaArrowRight,
+  FaBriefcase,
+  FaCalculator,
+  FaCheckCircle,
+  FaFileAlt,
+  FaMoneyBillWave,
+  FaUser
 } from "react-icons/fa";
+import API_URL from "../api";
 
 
 function ApplyForLoan({ onViewApplications }) {
@@ -448,9 +448,7 @@ function ApplyForLoan({ onViewApplications }) {
      * =====================================================
      */
 
-    const customersResponse = await fetch(
-      'http://localhost:8080/customers'
-    );
+    const customersResponse = await fetch(`${API_URL}/customers`);
 
     if (!customersResponse.ok) {
       throw new Error('Unable to load customer information.');
@@ -471,9 +469,7 @@ function ApplyForLoan({ onViewApplications }) {
      */
 
     if (!customer) {
-      const customerResponse = await fetch(
-        'http://localhost:8080/customers',
-        {
+      const customerResponse = await fetch(`${API_URL}/customers`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -499,9 +495,7 @@ function ApplyForLoan({ onViewApplications }) {
      * =====================================================
      */
 
-    const loanResponse = await fetch(
-      'http://localhost:8080/loans',
-      {
+    const loanResponse = await fetch(`${API_URL}/loans`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

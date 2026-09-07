@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-
+import API_URL from "../api";
 import {
   FaMoneyBillWave,
   FaSearch,
@@ -59,9 +59,7 @@ function LoanPage() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(
-        "http://localhost:8080/loans"
-      );
+      const response = await fetch(`${API_URL}/loans`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch loans");
@@ -95,9 +93,7 @@ function LoanPage() {
         return;
       }
 
-      const response = await fetch(
-        "http://localhost:8080/loans",
-        {
+      const response = await fetch(`${API_URL}/loans`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -142,9 +138,7 @@ function LoanPage() {
     try {
       setError(null);
 
-      const response = await fetch(
-        `http://localhost:8080/loans/${id}`,
-        {
+      const response = await fetch(`${API_URL}/loans/${id}`, {
           method: "DELETE",
         }
       );
@@ -191,9 +185,7 @@ function LoanPage() {
         return;
       }
 
-      const response = await fetch(
-        `http://localhost:8080/loans/${editingLoan.id}`,
-        {
+      const response = await fetch(`${API_URL}/loans/${editingLoan.id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -235,9 +227,7 @@ function LoanPage() {
     setError(null);
 
     try {
-      const response = await fetch(
-        `http://localhost:8080/customers/${loan.customerId}`
-      );
+      const response = await fetch(`${API_URL}/customers/${loan.customerId}`);
 
       if (!response.ok) {
         throw new Error(

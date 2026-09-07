@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-
+import API_URL from "../api";
 import {
   FaUsers,
   FaUserPlus,
@@ -72,9 +72,9 @@ function CustomerPage() {
 
       setError(null);
 
-      const response = await fetch(
-        "http://localhost:8080/customers"
-      );
+     const response = await fetch(
+  `${API_URL}/customers`
+);
 
 
       if (!response.ok) {
@@ -189,8 +189,8 @@ function CustomerPage() {
 
 
       const response = await fetch(
-        "http://localhost:8080/customers",
-        {
+  `${API_URL}/customers`,
+  {
           method: "POST",
 
           headers: {
@@ -268,8 +268,8 @@ function CustomerPage() {
 
 
       const response = await fetch(
-        `http://localhost:8080/customers/${id}`,
-        {
+  `${API_URL}/customers/${id}`,
+  {
           method: "DELETE"
         }
       );
@@ -344,8 +344,8 @@ function CustomerPage() {
 
 
       const response = await fetch(
-        `http://localhost:8080/customers/${editingCustomer.id}`,
-        {
+  `${API_URL}/customers/${editingCustomer.id}`,
+  {
           method: "PUT",
 
           headers: {
